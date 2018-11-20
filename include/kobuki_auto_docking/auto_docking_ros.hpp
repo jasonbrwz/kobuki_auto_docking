@@ -30,6 +30,7 @@
 #include <nav_msgs/Odometry.h>
 #include <kobuki_msgs/SensorState.h>
 #include <kobuki_msgs/DockInfraRed.h>
+#include <kids100a_msg/kids100a.h>
 
 #include <sstream>
 #include <vector>
@@ -45,8 +46,7 @@ namespace kobuki
 
 typedef message_filters::sync_policies::ApproximateTime<
   nav_msgs::Odometry,
-  kobuki_msgs::SensorState,
-  kobuki_msgs::DockInfraRed
+  kids100a_msg::kids100a
 > SyncPolicy;
 
 class AutoDockingROS
@@ -79,16 +79,14 @@ private:
   ros::Publisher velocity_commander_, motor_power_enabler_, debug_jabber_;
 
   boost::shared_ptr<message_filters::Subscriber<nav_msgs::Odometry> > odom_sub_;
-  boost::shared_ptr<message_filters::Subscriber<kobuki_msgs::DockInfraRed> > ir_sub_;
-  boost::shared_ptr<message_filters::Subscriber<kobuki_msgs::SensorState> > core_sub_;
+  boost::shared_ptr<message_filters::Subscriber<kids100a_msg::kids100a> > kids100a_sub_;
   boost::shared_ptr<message_filters::Synchronizer<SyncPolicy> > sync_;
 
   void goalCb();
   void preemptCb();
 
   void syncCb(const nav_msgs::OdometryConstPtr& odom,
-              const kobuki_msgs::SensorStateConstPtr& core,
-              const kobuki_msgs::DockInfraRedConstPtr& ir);
+              const kids100a_msg::kids100aConstPtr& kids100a);
   void debugCb(const std_msgs::StringConstPtr& msg);
 };
 

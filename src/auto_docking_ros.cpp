@@ -57,10 +57,9 @@ bool AutoDockingROS::init(ros::NodeHandle& nh)
   debug_ = nh.subscribe("debug/mode_shift", 10, &AutoDockingROS::debugCb, this);
 
   odom_sub_.reset(new message_filters::Subscriber<nav_msgs::Odometry>(nh, "odom", 10));
-  core_sub_.reset(new message_filters::Subscriber<kobuki_msgs::SensorState>(nh, "core", 10));
-  ir_sub_.reset(new message_filters::Subscriber<kobuki_msgs::DockInfraRed>(nh, "dock_ir", 10));
-  sync_.reset(new message_filters::Synchronizer<SyncPolicy>(SyncPolicy(10), *odom_sub_, *core_sub_, *ir_sub_));
-  sync_->registerCallback(boost::bind(&AutoDockingROS::syncCb, this, _1, _2, _3));
+  kids100a_sub_.reset(new message_filters::Subscriber<kids100a_msg::kids100a>(nh, "kids100a", 10));
+  sync_.reset(new message_filters::Synchronizer<SyncPolicy>(SyncPolicy(10), *odom_sub_, *kids100a_sub_));
+  sync_->registerCallback(boost::bind(&AutoDockingROS::syncCb, this, _1, _2));
 
   return dock_.init();
 }
@@ -103,8 +102,7 @@ void AutoDockingROS::preemptCb()
 }
 
 void AutoDockingROS::syncCb(const nav_msgs::OdometryConstPtr& odom,
-                            const kobuki_msgs::SensorStateConstPtr& core,
-                            const kobuki_msgs::DockInfraRedConstPtr& ir)
+                            const kids100a_msg::kids100aConstPtr& kids100a)
 {
   //process and run
   if(self->dock_.isEnabled()) {
@@ -121,7 +119,7 @@ void AutoDockingROS::syncCb(const nav_msgs::OdometryConstPtr& odom,
     pose.heading(y);
 
     //update
-    self->dock_.update(ir->data, core->bumper, core->charger, pose);
+    self->dock_.update(kids100a->ir, kids100a->bumper, kids100a->charger, pose);
 
     //publish debug stream
     std_msgs::StringPtr debug_log(new std_msgs::String);
